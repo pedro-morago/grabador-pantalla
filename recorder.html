@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Grabación de pantalla</title>
+<style>
+  :root{
+    --bg:#0E1116; --panel:#1E252E; --border:#2A323D; --border-hi:#3A4552;
+    --text:#E7ECF3; --muted:#8B95A4; --rec:#FF3B30; --focus:#5B9BFF;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--text); font-family:var(--sans); padding:24px;
+  }
+  .card{text-align:center; max-width:360px; width:100%}
+  .head{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:16px;
+  }
+  .dot{width:10px; height:10px; border-radius:50%; background:#3A4552; flex:none}
+  body[data-state="recording"] .dot{
+    background:var(--rec); box-shadow:0 0 0 3px rgba(255,59,48,.35);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  p{font-size:13px; line-height:1.6; color:var(--muted); margin:0 0 14px}
+  #timer{
+    font-family:var(--mono); font-size:44px; font-variant-numeric:tabular-nums;
+    letter-spacing:.04em; margin-bottom:6px;
+  }
+  .view{display:none}
+  body[data-state="picking"] #viewPicking{display:block}
+  body[data-state="recording"] #viewRecording{display:block}
+  body[data-state="saving"] #viewSaving{display:block}
+  button{
+    width:100%; padding:13px; border:1px solid var(--border-hi); border-radius:10px;
+    background:var(--panel); color:var(--text); font-size:15px; font-weight:600; cursor:pointer;
+  }
+  button:hover{background:#252D37}
+  button:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+  .warn{font-size:11px; color:var(--muted); margin-top:12px}
+  @media (prefers-reduced-motion:reduce){ .dot{animation:none} }
+</style>
+</head>
+<body data-state="picking">
+  <div class="card">
+    <div class="head"><span class="dot"></span> Grabador de pantalla</div>
+
+    <div class="view" id="viewPicking">
+      <p>Elige en el diálogo de Chrome qué pantalla o ventana quieres grabar. Marca <strong>Compartir audio</strong> si quieres el sonido del sistema.</p>
+    </div>
+
+    <div class="view" id="viewRecording">
+      <div id="timer">00:00</div>
+      <p>Grabando pantalla</p>
+      <button id="btnStop">Parar y guardar</button>
+      <div class="warn">Esta ventana queda minimizada mientras graba y se cierra sola al guardar. Si la cierras a mano, la grabación se pierde.</div>
+    </div>
+
+    <div class="view" id="viewSaving">
+      <p>Guardando la grabación…</p>
+    </div>
+  </div>
+  <script src="capture-common.js"></script>
+  <script src="recorder.js"></script>
+</body>
+</html>

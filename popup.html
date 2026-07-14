@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root{
+    --bg:#141A20; --panel:#1E252E; --border:#2A323D; --border-hi:#3A4552;
+    --text:#E7ECF3; --muted:#8B95A4; --rec:#FF3B30; --green:#34D399;
+    --amber:#F5A623; --focus:#5B9BFF;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    width:308px; margin:0; padding:16px;
+    background:var(--bg); color:var(--text); font-family:var(--sans);
+  }
+  .head{
+    display:flex; align-items:center; gap:9px;
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:14px;
+  }
+  .dot{width:10px; height:10px; border-radius:50%; background:#3A4552; flex:none}
+  body[data-state="recording"] .dot{
+    background:var(--rec); box-shadow:0 0 0 3px rgba(255,59,48,.35);
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .notice{
+    display:none; margin-bottom:12px; padding:10px 12px; border-radius:9px;
+    font-size:12px; line-height:1.5;
+  }
+  .notice.show{display:block}
+  .notice.warn{background:rgba(245,166,35,.12); border:1px solid rgba(245,166,35,.35); color:#F5C97B}
+  .notice.error{background:rgba(255,59,48,.12); border:1px solid rgba(255,59,48,.35); color:#FF9B94}
+
+  .row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--panel); border:1px solid var(--border); border-radius:10px;
+    padding:11px 13px; margin-bottom:10px;
+  }
+  .lbl{font-size:13px}
+  .sub{font-size:11px; color:var(--muted); margin-top:2px}
+  .switch{position:relative; width:42px; height:24px; flex:none}
+  .switch input{position:absolute; opacity:0; width:100%; height:100%; margin:0; cursor:pointer}
+  .track{position:absolute; inset:0; background:#2A323D; border-radius:999px; transition:background .18s}
+  .thumb{position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#8B95A4; transition:transform .18s, background .18s}
+  .switch input:checked + .track{background:rgba(52,211,153,.28)}
+  .switch input:checked + .track .thumb{transform:translateX(18px); background:var(--green)}
+  .switch input:focus-visible + .track{outline:2px solid var(--focus); outline-offset:2px}
+  select{
+    background:var(--bg); color:var(--text); border:1px solid var(--border-hi);
+    border-radius:8px; padding:7px 9px; font-family:var(--mono); font-size:12px; cursor:pointer;
+  }
+  select:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+
+  /* Vista grabando */
+  #recView{display:none; text-align:center; padding:14px 0 6px}
+  body[data-state="recording"] #recView{display:block}
+  body[data-state="recording"] #idleView{display:none}
+  body[data-state="recording"] #tip{display:none}
+  #timer{
+    font-family:var(--mono); font-size:36px; font-variant-numeric:tabular-nums;
+    letter-spacing:.04em; margin-bottom:4px;
+  }
+  #recView .sub{font-size:12px; margin-bottom:14px}
+
+  .btn{
+    width:100%; padding:13px; border-radius:10px; font-family:var(--sans);
+    font-size:15px; font-weight:600; cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .btn:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
+  .btn.primary{background:var(--rec); border:1px solid var(--rec); color:#fff; margin-top:4px}
+  .btn.primary:hover{background:#E23229; border-color:#E23229}
+  .btn.secondary{background:var(--panel); border:1px solid var(--border-hi); color:var(--text); margin-top:8px}
+  .btn.secondary:hover{background:#252D37}
+
+  .tip{margin-top:12px; font-size:11px; line-height:1.5; color:var(--muted)}
+  .tip b{color:var(--text); font-weight:600}
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} .dot{animation:none!important} }
+</style>
+</head>
+<body data-state="idle">
+  <div class="head"><span class="dot"></span> Grabador de pantalla</div>
+
+  <div class="notice" id="notice"></div>
+
+  <div id="idleView">
+    <div class="row">
+      <div>
+        <div class="lbl">Micrófono</div>
+        <div class="sub">Incluir tu voz</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="mic"><span class="track"><span class="thumb"></span></span></label>
+    </div>
+    <div class="row">
+      <div>
+        <div class="lbl">Calidad</div>
+        <div class="sub">Bitrate y fps</div>
+      </div>
+      <select id="quality">
+        <option value="high">Alta · 30 fps</option>
+        <option value="medium">Media · 30 fps</option>
+        <option value="light">Ligera · 15 fps</option>
+      </select>
+    </div>
+    <button class="btn primary" id="btnTab">Grabar pestaña actual</button>
+    <button class="btn secondary" id="btnScreen">Grabar pantalla o ventana</button>
+  </div>
+
+  <div id="recView">
+    <div id="timer">00:00</div>
+    <div class="sub">Grabando. Puedes cerrar este popup y cambiar de pestaña.</div>
+    <button class="btn secondary" id="btnStop">Parar grabación</button>
+  </div>
+
+  <div class="tip" id="tip"><b>Pestaña actual</b> incluye su audio automáticamente. Para <b>pantalla o ventana</b>, marca <b>Compartir audio</b> en el selector si quieres el sonido del sistema. La grabación de pantalla/ventana deja una ventanita minimizada que se cierra sola al guardar. Atajo: <b>Ctrl/Cmd + Shift + U</b>.</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
